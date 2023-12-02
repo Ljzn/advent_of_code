@@ -1,12 +1,24 @@
 defmodule Trebuchet do
   def main(input) do
-    String.split(input, "\n", trim: true)
-    |> Enum.map(fn line -> String.to_charlist(line) |> calibration_value() end)
-    |> Enum.sum()
+    main_build(%{first: &first_digit/1, last: &last_digit/1}).(input)
   end
 
-  def calibration_value(line) do
-    10 * first_digit(line) + last_digit(line)
+  def main2(input) do
+    main_build(%{first: &first_digit2/1, last: &last_digit2/1}).(input)
+  end
+
+  defp main_build(spec) do
+    fn input ->
+      input
+      |> parse()
+      |> Enum.map(fn line -> 10 * spec.first.(line) + spec.last.(line) end)
+      |> Enum.sum()
+    end
+  end
+
+  defp parse(input) do
+    String.split(input, "\n", trim: true)
+    |> Enum.map(fn line -> String.to_charlist(line) end)
   end
 
   defp first_digit([h | _t]) when h in ?0..?9 do
@@ -16,17 +28,6 @@ defmodule Trebuchet do
   defp first_digit([_ | t]), do: first_digit(t)
 
   defp last_digit(line), do: Enum.reverse(line) |> first_digit()
-
-  def main2(input) do
-    String.split(input, "\n", trim: true)
-    |> Enum.map(fn line -> String.to_charlist(line) |> calibration_value2() end)
-    |> Enum.sum()
-  end
-
-  def calibration_value2(line) do
-    10 * first_digit2(line) + last_digit2(line)
-    # |> IO.inspect(label: "calibration")
-  end
 
   @letters ~w(one two three four five six seven eight nine)c
 
@@ -58,8 +59,6 @@ defmodule Trebuchet do
   defp do_find([h | _t], _, _, _) when h in ?0..?9, do: h - ?0
 
   defp do_find([h | t], value_map, path_map0, jobs) do
-    # IO.inspect(jobs, label: "jobs")
-
     result =
       Enum.flat_map(jobs, fn {path_map, stack} ->
         case path_map[h] do
